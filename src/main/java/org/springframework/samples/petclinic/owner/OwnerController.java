@@ -65,8 +65,8 @@ class OwnerController {
 	public Owner findOwner(@PathVariable(name = "ownerId", required = false) Integer ownerId) {
 		return ownerId == null ? new Owner()
 				: this.owners.findById(ownerId)
-					.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
-							+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
+						.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
+								+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
 	}
 
 	@GetMapping("/owners/new")
@@ -129,7 +129,7 @@ class OwnerController {
 
 	private Page<Owner> findPaginatedForOwnersLastName(int page, String lastname) {
 		int pageSize = 5;
-		Pageable pageable = PageRequest.of(page, pageSize);
+		Pageable pageable = PageRequest.of(page - 1, pageSize);
 		return owners.findByLastNameStartingWith(lastname, pageable);
 	}
 
@@ -160,6 +160,7 @@ class OwnerController {
 
 	/**
 	 * Custom handler for displaying an owner.
+	 * 
 	 * @param ownerId the ID of the owner to display
 	 * @return a ModelMap with the model attributes for the view
 	 */
