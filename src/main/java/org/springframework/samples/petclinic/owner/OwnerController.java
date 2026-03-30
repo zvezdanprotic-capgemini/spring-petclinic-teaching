@@ -65,8 +65,8 @@ class OwnerController {
 	public Owner findOwner(@PathVariable(name = "ownerId", required = false) Integer ownerId) {
 		return ownerId == null ? new Owner()
 				: this.owners.findById(ownerId)
-					.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
-							+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
+						.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
+								+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
 	}
 
 	@GetMapping("/owners/new")
@@ -160,6 +160,7 @@ class OwnerController {
 
 	/**
 	 * Custom handler for displaying an owner.
+	 * 
 	 * @param ownerId the ID of the owner to display
 	 * @return a ModelMap with the model attributes for the view
 	 */
@@ -169,8 +170,22 @@ class OwnerController {
 		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
-		mav.addObject(owner);
+		mav.addObject("ownerId", ownerId);
 		return mav;
+	}
+
+	@GetMapping("/owners/{ownerId}/data")
+	@org.springframework.web.bind.annotation.ResponseBody
+	public String getOwnerData(@PathVariable("ownerId") int ownerId) {
+		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
+		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
+				"Owner not found with id: " + ownerId));
+
+		return "{id: " + owner.getId() +
+				", name: \"" + owner.getFirstName() + "\", " +
+				"adress: \"" + owner.getAddress() + "\", " +
+				"telephone: " + owner.getTelephone() + ", " +
+				"city: \"" + owner.getCity() + "\"}";
 	}
 
 }
