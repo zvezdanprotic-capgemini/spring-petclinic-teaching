@@ -59,11 +59,6 @@ class OwnerController {
 	@InitBinder
 	public void setAllowedFields(WebDataBinder dataBinder) {
 		dataBinder.setDisallowedFields("id");
-		// Register a custom editor that preserves empty strings (doesn't convert to
-		// null)
-		// This allows empty lastName to be saved as "" instead of null
-		dataBinder.registerCustomEditor(String.class,
-				new org.springframework.beans.propertyeditors.StringTrimmerEditor(false));
 	}
 
 	@ModelAttribute("owner")
@@ -132,20 +127,18 @@ class OwnerController {
 		if (sortByLetter) {
 			listOwners = listOwners.stream()
 					.sorted((o1, o2) -> {
-						// Group by first letter of last name
-						// This will crash if lastName is null or empty!
+						// Safely compare first letters, handling null/empty strings
 						String ln1 = o1.getLastName();
 						String ln2 = o2.getLastName();
-						char letter1 = ln1.charAt(0); // Crash on null or empty
-						char letter2 = ln2.charAt(0); // Crash on null or empty
+						if (ln1 == null || ln1.isEmpty())
+							return 1;
+						if (ln2 == null || ln2.isEmpty())
+							return -1;
+						char letter1 = ln1.charAt(0);
+						char letter2 = ln2.charAt(0);
 						return Character.compare(letter1, letter2);
 					})
 					.toList();
-		}
-
-		// Add computed property for display - this will crash on empty lastName!
-		for (Owner owner : listOwners) {
-			char firstLetter = owner.getLastName().charAt(0); // This will crash if empty or null!
 		}
 
 		model.addAttribute("currentPage", page);
