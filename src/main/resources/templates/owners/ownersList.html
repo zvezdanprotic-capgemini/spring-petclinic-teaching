@@ -29,6 +29,8 @@
     </tbody>
   </table>
   <div th:if="${totalPages > 1}">
+    <span><strong>Total Owners: </strong><span th:text="${totalItems}">0</span></span>
+    <span>&nbsp;|&nbsp;</span>
     <span th:text="#{pages}">Pages:</span>
     <span>[</span>
     <span th:each="i: ${#numbers.sequence(1, totalPages)}">
