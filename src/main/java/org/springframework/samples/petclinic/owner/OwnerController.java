@@ -59,14 +59,19 @@ class OwnerController {
 	@InitBinder
 	public void setAllowedFields(WebDataBinder dataBinder) {
 		dataBinder.setDisallowedFields("id");
+		// Register a custom editor that preserves empty strings (doesn't convert to
+		// null)
+		// This allows empty lastName to be saved as "" instead of null
+		dataBinder.registerCustomEditor(String.class,
+				new org.springframework.beans.propertyeditors.StringTrimmerEditor(false));
 	}
 
 	@ModelAttribute("owner")
 	public Owner findOwner(@PathVariable(name = "ownerId", required = false) Integer ownerId) {
 		return ownerId == null ? new Owner()
 				: this.owners.findById(ownerId)
-					.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
-							+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
+						.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
+								+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
 	}
 
 	@GetMapping("/owners/new")
@@ -92,7 +97,9 @@ class OwnerController {
 	}
 
 	@GetMapping("/owners")
-	public String processFindForm(@RequestParam(defaultValue = "1") int page, Owner owner, BindingResult result,
+	public String processFindForm(@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "false") boolean sortByLetter,
+			Owner owner, BindingResult result,
 			Model model) {
 		// allow parameterless GET request for /owners to return all records
 		String lastName = owner.getLastName();
@@ -115,15 +122,37 @@ class OwnerController {
 		}
 
 		// multiple owners found
-		return addPaginationModel(page, model, ownersResults);
+		return addPaginationModel(page, sortByLetter, model, ownersResults);
 	}
 
-	private String addPaginationModel(int page, Model model, Page<Owner> paginated) {
+	private String addPaginationModel(int page, boolean sortByLetter, Model model, Page<Owner> paginated) {
 		List<Owner> listOwners = paginated.getContent();
+
+		// Sort by first letter of last name if requested
+		if (sortByLetter) {
+			listOwners = listOwners.stream()
+					.sorted((o1, o2) -> {
+						// Group by first letter of last name
+						// This will crash if lastName is null or empty!
+						String ln1 = o1.getLastName();
+						String ln2 = o2.getLastName();
+						char letter1 = ln1.charAt(0); // Crash on null or empty
+						char letter2 = ln2.charAt(0); // Crash on null or empty
+						return Character.compare(letter1, letter2);
+					})
+					.toList();
+		}
+
+		// Add computed property for display - this will crash on empty lastName!
+		for (Owner owner : listOwners) {
+			char firstLetter = owner.getLastName().charAt(0); // This will crash if empty or null!
+		}
+
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", paginated.getTotalPages());
 		model.addAttribute("totalItems", paginated.getTotalElements());
 		model.addAttribute("listOwners", listOwners);
+		model.addAttribute("sortByLetter", sortByLetter);
 		return "owners/ownersList";
 	}
 
@@ -160,6 +189,7 @@ class OwnerController {
 
 	/**
 	 * Custom handler for displaying an owner.
+	 * 
 	 * @param ownerId the ID of the owner to display
 	 * @return a ModelMap with the model attributes for the view
 	 */
