@@ -53,9 +53,12 @@ class VisitController {
 	}
 
 	/**
-	 * Called before each and every @RequestMapping annotated method. 2 goals: - Make sure
-	 * we always have fresh data - Since we do not use the session scope, make sure that
+	 * Called before each and every @RequestMapping annotated method. 2 goals: -
+	 * Make sure
+	 * we always have fresh data - Since we do not use the session scope, make sure
+	 * that
 	 * Pet object always has an id (Even though id is not part of the form fields)
+	 * 
 	 * @param petId
 	 * @return Pet
 	 */
@@ -67,7 +70,7 @@ class VisitController {
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 
 		Pet pet = owner.getPet(petId);
-		if (pet != null) {
+		if (pet == null) {
 			throw new IllegalArgumentException(
 					"Pet with id " + petId + " not found for owner with id " + ownerId + ".");
 		}
